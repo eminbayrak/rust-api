@@ -1,16 +1,19 @@
 use actix_web::HttpResponse;
+use chrono::NaiveDateTime;
 use crate::db::connection;
 use crate::api::models::User;
+use sqlx::Row;
 
 pub async fn users() -> HttpResponse {
     // Establish a connection to the database
-    let client = match connection::establish_connection().await {
-        Ok(client) => client,
+    let pool = match connection::establish_connection().await {
+        Ok(pool) => pool,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
 
     // Execute a SQL query to fetch user data
-    let rows = match client.query("SELECT id, first_name, last_name, username, email, created_at FROM users", &[]).await {
+    let rows = match sqlx::query("SELECT id, first_name, last_name, username, email, created_at FROM users")
+        .fetch_all(&pool).await {
         Ok(rows) => rows,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
@@ -23,7 +26,7 @@ pub async fn users() -> HttpResponse {
         let last_name: String = row.get(2);
         let username: String = row.get(3);
         let email: String = row.get(4);
-        let created_at: String = row.get(5);
+        let created_at: NaiveDateTime = row.get(5);
         users.push(User { id, first_name, last_name, username, email, created_at });
     }
 

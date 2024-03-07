@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use chrono::NaiveDateTime;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct User {
@@ -7,7 +8,7 @@ pub struct User {
     pub last_name: String,
     pub username: String,
     pub email: String,
-    pub created_at: String,
+    pub created_at: NaiveDateTime,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
