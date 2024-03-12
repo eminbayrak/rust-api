@@ -10,7 +10,7 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), Error> {
             last_name VARCHAR(50) NOT NULL,
             username VARCHAR(50) NOT NULL,
             email VARCHAR(100) NOT NULL,
-            password TEXT NULL,
+            password BYTEA NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         "#,
@@ -26,27 +26,20 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), Error> {
 
     // If the table is empty, seed dummy data
     if count == 0 {
-        sqlx::query(
-            r#"
-            DO $$
-            DECLARE
-                first_names VARCHAR[] := ARRAY['John', 'Emma', 'Michael', 'Sophia', 'William', 'Olivia', 'James', 'Ava', 'Alexander', 'Isabella', 'Daniel', 'Mia', 'Matthew', 'Emily', 'Joseph', 'Charlotte', 'David', 'Abigail', 'Benjamin', 'Amelia'];
-                last_names VARCHAR[] := ARRAY['Smith', 'Johnson', 'Williams', 'Jones', 'Brown', 'Davis', 'Miller', 'Wilson', 'Moore', 'Taylor', 'Anderson', 'Thomas', 'Jackson', 'White', 'Harris', 'Martin', 'Thompson', 'Garcia', 'Martinez', 'Robinson'];
-            BEGIN
-                FOR i IN 1..100 LOOP
-                    INSERT INTO users (first_name, last_name, username, email)
-                    VALUES (
-                        first_names[FLOOR(RANDOM() * array_length(first_names, 1)) + 1],
-                        last_names[FLOOR(RANDOM() * array_length(last_names, 1)) + 1],
-                        'user' || i,
-                        'user' || i || '@example.com'
-                    );
-                END LOOP;
-            END $$;
-            "#,
-        )
-        .execute(pool)
-        .await?;
+        for i in 1..=100 {
+            sqlx::query(
+                r#"
+                INSERT INTO users (first_name, last_name, username, email)
+                VALUES ($1, $2, $3, $4)
+                "#,
+            )
+            .bind(format!("John{}", i))
+            .bind(format!("Doe{}", i))
+            .bind(format!("user{}", i))
+            .bind(format!("user{}@example.com", i))
+            .execute(pool)
+            .await?;
+        }
     }
 
     Ok(())

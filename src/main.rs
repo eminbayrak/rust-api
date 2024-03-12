@@ -8,10 +8,12 @@ use crate::db::migrations::run_migrations;
 use sqlx::PgPool;
 use dotenv::dotenv;
 use std::env;
-
+use env_logger;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    // Initialize logger
+    env_logger::init();
     // Run migrations before starting the HTTP server
     dotenv().ok();
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
